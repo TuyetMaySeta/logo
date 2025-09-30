@@ -1,0 +1,36 @@
+{
+    "title": "Quản lý nhân sự",
+    "employee_list": "Danh sách ứng viên nộp CV",
+    "export_excel": "Xuất Excel",
+    "full_name": "Họ và Tên",
+    "position": "Vị trí",
+    "skills": "Kỹ năng",
+    "education": "Học vấn",
+    "applied_date": "Ngày nộp",
+    "status": "Trạng thái",
+    "actions": "Hành động",
+    "all_statuses": "Tất cả trạng thái",
+    "status_filter": {  
+        "pending": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Từ chối",
+        "interviewing": "Phỏng vấn"
+    },
+    "all_positions": "Tất cả vị trí",
+    "position_filter": {
+        "frontend_developer": "Lập trình viên Frontend",
+        "backend_developer": "Lập trình viên Backend",
+        "full_stack_developer": "Lập trình viên Full Stack",
+        "devops_engineer": "Kỹ sư DevOps",
+        "ui_ux_designer": "Thiết kế UI/UX",
+        "product_manager": "Quản lý sản phẩm"
+    },
+    "all_locations": "Tất cả địa điểm",
+    "location_filter": {
+        "ha_noi": "Hà Nội",
+        "tp_hcm": "TP.HCM",
+        "da_nang": "Đà Nẵng"
+    },
+    "advanced_filter": "Lọc nâng cao"
+
+}
