@@ -1,0 +1,35 @@
+{
+    "title": "Human Resources Management",
+    "employee_list": "List of CV Submissions",
+    "export_excel": "Export to Excel",
+    "full_name": "Full Name",
+    "position": "Position",
+    "skills": "Skills",
+    "education": "Education",
+    "applied_date": "Applied Date",
+    "status": "Status",
+    "actions": "Actions",
+    "all_statuses": "All Statuses",
+    "status_filter": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "interviewing": "Interviewing"
+    },
+    "all_positions": "All Positions",
+    "position_filter": {
+        "frontend_developer": "Frontend Developer",
+        "backend_developer": "Backend Developer",
+        "full_stack_developer": "Full Stack Developer",
+        "devops_engineer": "DevOps Engineer",
+        "ui_ux_designer": "UI/UX Designer",
+        "product_manager": "Product Manager"
+    },
+    "all_locations": "All Locations",
+    "location_filter": {
+        "ha_noi": "Hanoi",
+        "tp_hcm": "Ho Chi Minh City",
+        "da_nang": "Da Nang"
+    },
+    "advanced_filter": "Advanced Filter"
+}
