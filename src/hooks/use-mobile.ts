@@ -1,14 +1,19 @@
-export const config = {
-  apiUrl: window.__ENV__?.VITE_EMS_API_URL ?? import.meta.env.VITE_EMS_API_URL,
-  basePath: window.__ENV__?.VITE_BASE_PATH ?? import.meta.env.VITE_BASE_PATH,
-  nodeEnv: window.__ENV__?.NODE_ENV ?? import.meta.env.MODE,
-};
+import * as React from "react"
 
-if (!config.apiUrl) {
-  console.warn("VITE_EMS_API_URL is not defined in the environment variables.");
-} else {
-  console.log("VITE_EMS_API_URL is defined in the environment variables.");
+const MOBILE_BREAKPOINT = 768
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    }
+    mql.addEventListener("change", onChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return !!isMobile
 }
-
-// Export API_URL for backward compatibility
-export const API_URL = config.apiUrl;
