@@ -5,12 +5,10 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import BaseTable, { type BaseTableState } from "./common/BaseTable";
 import { createEmployeeColumns } from "./employees-list/EmployeeColumns";
-import EmployeeDetailDialog from "./employees-list/EmployeeDetailDialog";
 import { Header } from "./employees-list/Header";
 import emsClient from "@/service/emsClient";
 import { protectedPage } from "./auth/AuthWrapper";
-import useOrgStore from "@/stores/orgStore";
-
+import { toast } from "sonner";  
 // Main Component
 const EmployeeManagement = () => {
   const { t } = useTranslation("employee");
@@ -28,16 +26,11 @@ const EmployeeManagement = () => {
     location: "",
   });
 
-  const { id: orgId } = useOrgStore();
 
   const [data, setData] = useState<Employee[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
-  const [detailOpen, setDetailOpen] = useState<boolean>(false);
-  const [detailData, setDetailData] = useState<Employee | null>(null);
-  const [detailLoading, setDetailLoading] = useState<boolean>(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
 
   // ✅ Sử dụng ref để track request hiện tại
   const currentRequestId = useRef<number>(0);
@@ -82,7 +75,7 @@ const EmployeeManagement = () => {
           }
         });
 
-        const urlWithParams = `/orgs/${orgId}/employees?${params.toString()}`;
+        const urlWithParams = `/orgs/employees?${params.toString()}`;
         console.log("API URL:", urlWithParams);
 
         const res = await emsClient.get(urlWithParams);
@@ -143,45 +136,103 @@ const EmployeeManagement = () => {
     tableState.sorting,
   ]);
 
-  const handleViewDetail = useCallback(async (id: number) => {
-    setDetailOpen(true);
-    setDetailLoading(true);
-    setDetailError(null);
-    setDetailData(null);
-
-    try {
-      console.log("Fetching employee detail:", id);
-
-      const res = await emsClient.get(`/orgs/${orgId}/employees/${id}`);
-
-      if (res.status !== 200) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  const handleDownloadCV = useCallback(async (id: number) => {
+  try {
+    console.log("Downloading CV for employee:", id);
+    
+    toast.info("Dowloading CV...", {
+      description: `Downloading CV of employee_id #${id}`,
+    });
+    
+    const response = await emsClient.get(
+      `/employees/${id}/cv/download/docx`,  
+      {
+        responseType: 'blob',
       }
-
-      const detail = res.data;
-      console.log("Employee detail:", detail);
-
-      setDetailData(detail);
-    } catch (e: unknown) {
-      console.error("Fetch detail error:", e);
-
-      if (e instanceof Error) {
-        setDetailError(e.message || "Failed to load detail");
-      } else {
-        setDetailError("Failed to load detail");
+    );
+    
+    const contentDisposition = 
+      response.headers['content-disposition'] || 
+      response.headers['Content-Disposition'];
+    
+    let filename = `CV_Employee_${id}.docx`; // Fallback
+    
+    console.log('Content-Disposition header:', contentDisposition); // ✅ Debug
+    
+    if (contentDisposition) {
+      // Parse: "attachment; filename=CV_Nguyen_Van_A.docx"
+      const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1].replace(/['"]/g, '').trim();
       }
-    } finally {
-      setDetailLoading(false);
     }
-  }, []);
+    
+    
+    // Download the file
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
+    const url = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;  
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    toast.success("Tải CV thành công!", {
+      description: `${filename} đã được tải xuống`,
+    });
+    
+  } catch (error) {
+    console.error("Download CV error:", error);
+    toast.error("Tải CV thất bại", {
+      description: "Không thể tải CV. Vui lòng thử lại.",
+    });
+  }
+}, []); 
+
+const handleShareLink = useCallback(async (id: number) => {
+  try {
+    toast.info("Creating Link ...",{
+      description: `Creating link share for employee #${id}`,
+    });
+
+    //call api
+    const response = await emsClient.post(`/orgs/employees/share-link/${id}`)
+    if (response.status !== 200) {
+      throw new Error("Failed to generate share link");
+    }
+
+    // give share link
+    const shareUrl = response.data.share_url || response.data.url || response.data.link;
+    console.log("Share URL:", shareUrl);
+    
+    // Copy vào clipboard
+    await navigator.clipboard.writeText(shareUrl);
+    
+    toast.success("Done copy!", {
+      description: `Link employee #${id} is copied`,
+    });
+  } catch (error) {
+    console.error("Share link error:", error);
+    toast.error("Fail to copy link", {
+      description: "Couldn't copy link. Please try again",
+    });
+  }
+}, []);
 
   const columns = useMemo<ColumnDef<Employee>[]>(
-    () => createEmployeeColumns(t, handleViewDetail, tableState, setTableState),
-    [t, handleViewDetail, tableState, setTableState]
+    () => createEmployeeColumns(t, handleDownloadCV,  handleShareLink, tableState, setTableState),
+    [t, handleDownloadCV, handleShareLink, tableState, setTableState]
   );
 
   return (
-    <div className="p-6 min-h-screen w-full">
+    <div className="min-h-screen w-full">
       <div className="max-w-full w-full space-y-6">
         {/* Header */}
         <Header t={t} />
@@ -197,16 +248,6 @@ const EmployeeManagement = () => {
               onTableStateChange={setTableState}
               isLoading={isLoading}
               isError={isError}
-            />
-
-            {/* Employee Detail Dialog */}
-            <EmployeeDetailDialog
-              open={detailOpen}
-              onOpenChange={setDetailOpen}
-              loading={detailLoading}
-              error={detailError}
-              data={detailData}
-              t={t}
             />
           </CardContent>
         </Card>
